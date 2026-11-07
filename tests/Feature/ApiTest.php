@@ -46,6 +46,11 @@ class ApiTest extends TestCase
         $this->getJson("/api/products/{$p->id}")->assertOk()->assertJsonPath('data.name', 'Колумбия');
     }
 
+    public function test_not_found_message_has_no_class_names(): void
+    {
+        $this->getJson('/api/products/9999')->assertNotFound()->assertExactJson(['message' => 'Не найдено']);
+    }
+
     public function test_hidden_product_is_404(): void
     {
         $p = Product::factory()->create(['is_active' => false]);
