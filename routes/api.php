@@ -9,7 +9,7 @@ Route::post('/login', [Api\AuthController::class, 'login'])->middleware('throttl
 
 Route::get('/categories', [Api\ProductController::class, 'categories']);
 Route::get('/products', [Api\ProductController::class, 'index']);
-Route::get('/products/{product}', [Api\ProductController::class, 'show'])->whereNumber('product');
+Route::get('/products/{product:id}', [Api\ProductController::class, 'show'])->whereNumber('product');
 
 // нужен токен
 Route::middleware('auth:sanctum')->group(function () {
@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // изменять товары может только админ
     Route::middleware('admin')->group(function () {
         Route::post('/products', [Api\ProductController::class, 'store']);
-        Route::put('/products/{product}', [Api\ProductController::class, 'update'])->whereNumber('product');
-        Route::delete('/products/{product}', [Api\ProductController::class, 'destroy'])->whereNumber('product');
+        Route::put('/products/{product:id}', [Api\ProductController::class, 'update'])->whereNumber('product');
+        Route::delete('/products/{product:id}', [Api\ProductController::class, 'destroy'])->whereNumber('product');
     });
 });

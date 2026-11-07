@@ -40,6 +40,10 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->products()->exists()) {
+            return back()->with('error', 'В категории есть товары, сначала перенесите или удалите их');
+        }
+
         $category->delete();
 
         return back()->with('success', 'Категория удалена');

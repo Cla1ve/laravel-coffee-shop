@@ -7,7 +7,6 @@ use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -65,7 +64,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        $data['slug'] = Str::slug($data['name']);
+        $data['slug'] = Product::uniqueSlug($data['name']);
 
         $product = Product::create($data);
 
@@ -81,6 +80,12 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($product->orderItems()->exists()) {
+            $product->update(['is_active' => false]);
+
+            return response()->json(['message' => 'Товар есть в заказах, он скрыт из каталога, но не удалён'], 409);
+        }
+
         $product->delete();
 
         return response()->json(null, 204);

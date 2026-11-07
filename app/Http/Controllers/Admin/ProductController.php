@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -34,7 +33,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        $data['slug'] = Str::slug($data['name']);
+        $data['slug'] = Product::uniqueSlug($data['name']);
 
         if ($request->hasFile('image')) {
             $data['image'] = 'storage/' . $request->file('image')->store('products', 'public');
@@ -68,6 +67,13 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // товар из заказов удалять нельзя, иначе пропадёт история покупок: просто скрываем
+        if ($product->orderItems()->exists()) {
+            $product->update(['is_active' => false]);
+
+            return back()->with('error', 'Товар есть в заказах, поэтому он скрыт из каталога, но не удалён');
+        }
+
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Товар удалён');
