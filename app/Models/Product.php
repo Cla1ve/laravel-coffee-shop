@@ -40,7 +40,7 @@ class Product extends Model
     // slug из названия; если такой уже есть, добавляем номер: kofe, kofe-2, kofe-3
     public static function uniqueSlug(string $name): string
     {
-        $base = Str::slug($name) ?: 'tovar';
+        $base = Str::slug($name, '-', 'ru') ?: 'tovar';
         $slug = $base;
         $i = 2;
         while (static::where('slug', $slug)->exists()) {

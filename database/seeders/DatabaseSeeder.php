@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
         // категории
         $cats = [];
         foreach (['Кофе в зёрнах', 'Молотый кофе', 'Чай', 'Аксессуары'] as $name) {
-            $cats[$name] = Category::create(['name' => $name, 'slug' => Str::slug($name)]);
+            $cats[$name] = Category::create(['name' => $name, 'slug' => Str::slug($name, '-', 'ru')]);
         }
 
         // товары: название, категория, цена, остаток, файл фото, описание
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
             Product::create([
                 'category_id' => $cats[$cat]->id,
                 'name' => $name,
-                'slug' => Str::slug($name),
+                'slug' => Str::slug($name, '-', 'ru'),
                 'description' => $text,
                 'price' => $price,
                 'stock' => $stock,

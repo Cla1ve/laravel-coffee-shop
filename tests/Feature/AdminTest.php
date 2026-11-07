@@ -58,7 +58,7 @@ class AdminTest extends TestCase
         $this->actingAs($this->admin())->post('/admin/products', $this->productData($cat))
             ->assertRedirect(route('admin.products.index'));
 
-        $this->assertDatabaseHas('products', ['name' => 'Новый кофе', 'slug' => 'novyi-kofe', 'stock' => 15]);
+        $this->assertDatabaseHas('products', ['name' => 'Новый кофе', 'slug' => 'novyy-kofe', 'stock' => 15]);
     }
 
     public function test_admin_can_upload_image(): void

@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: API магазина «Зерно»
+  description: Каталог товаров, заказы и вход по токену. Токен выдаётся при входе и передаётся в заголовке Authorization (Bearer).
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api
+tags:
+  - name: Авторизация
+  - name: Каталог
+  - name: Заказы
+  - name: Управление товарами
+    description: Только для администратора
+paths:
+  /register:
+    post:
+      tags: [Авторизация]
+      summary: Регистрация
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name: {type: string, example: Анна}
+                email: {type: string, example: anna@example.com}
+                phone: {type: string, example: "+79991234567"}
+                password: {type: string, example: Secret123}
+                password_confirmation: {type: string, example: Secret123}
+      responses:
+        '201':
+          description: Пользователь создан, в ответе токен
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AuthResponse'}
+        '422':
+          description: Ошибки проверки полей
+  /login:
+    post:
+      tags: [Авторизация]
+      summary: Вход, получение токена
+      description: Не больше 5 попыток в минуту, дальше ответ 429.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: {type: string, example: ivan@zerno.test}
+                password: {type: string, example: User2026!}
+      responses:
+        '200':
+          description: Токен выдан
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AuthResponse'}
+        '401':
+          description: Неверная почта или пароль
+        '429':
+          description: Слишком много попыток
+  /logout:
+    post:
+      tags: [Авторизация]
+      summary: Выход, текущий токен удаляется
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Токен удалён}
+        '401': {description: Нет токена}
+  /user:
+    get:
+      tags: [Авторизация]
+      summary: Данные текущего пользователя
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Пользователь}
+        '401': {description: Нет токена}
+  /categories:
+    get:
+      tags: [Каталог]
+      summary: Список категорий
+      responses:
+        '200':
+          description: Категории
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Category'}
+  /products:
+    get:
+      tags: [Каталог]
+      summary: Список товаров с фильтрами и страницами
+      parameters:
+        - {name: q, in: query, description: Поиск по названию и описанию, schema: {type: string}}
+        - {name: category, in: query, description: slug категории, schema: {type: string, example: chai}}
+        - {name: min, in: query, description: Цена от, schema: {type: number}}
+        - {name: max, in: query, description: Цена до, schema: {type: number}}
+        - {name: sort, in: query, schema: {type: string, enum: [new, price_asc, price_desc, name]}}
+        - {name: page, in: query, schema: {type: integer, default: 1}}
+        - {name: per_page, in: query, description: От 1 до 50, schema: {type: integer, default: 10}}
+      responses:
+        '200':
+          description: Страница товаров
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: '#/components/schemas/Product'}
+                  links: {type: object}
+                  meta: {type: object}
+        '422': {description: Неверные параметры}
+    post:
+      tags: [Управление товарами]
+      summary: Добавить товар
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductInput'}
+      responses:
+        '201': {description: Товар создан}
+        '401': {description: Нет токена}
+        '403': {description: Не администратор}
+        '422': {description: Ошибки проверки полей}
+  /products/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    get:
+      tags: [Каталог]
+      summary: Один товар
+      responses:
+        '200':
+          description: Товар
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: '#/components/schemas/Product'}
+        '404': {description: Товара нет или он скрыт}
+    put:
+      tags: [Управление товарами]
+      summary: Изменить товар
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductInput'}
+      responses:
+        '200': {description: Товар сохранён}
+        '403': {description: Не администратор}
+        '404': {description: Товар не найден}
+        '422': {description: Ошибки проверки полей}
+    delete:
+      tags: [Управление товарами]
+      summary: Удалить товар
+      description: Если товар есть в заказах, он только скрывается, ответ 409.
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Товар удалён}
+        '403': {description: Не администратор}
+        '409': {description: Товар есть в заказах, скрыт}
+  /orders:
+    get:
+      tags: [Заказы]
+      summary: Мои заказы
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Заказы текущего пользователя, по 10 на странице}
+        '401': {description: Нет токена}
+    post:
+      tags: [Заказы]
+      summary: Оформить заказ
+      description: Одинаковые товары в списке складываются. Если товара не хватает, заказ не создаётся.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/OrderInput'}
+      responses:
+        '201': {description: Заказ создан}
+        '401': {description: Нет токена}
+        '422': {description: Ошибки проверки или не хватает товара}
+  /orders/{id}:
+    get:
+      tags: [Заказы]
+      summary: Один заказ
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: integer}}
+      responses:
+        '200': {description: Заказ}
+        '403': {description: Чужой заказ}
+        '404': {description: Не найден}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Category:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        slug: {type: string}
+    Product:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        slug: {type: string}
+        description: {type: string}
+        price: {type: string, example: "890.00"}
+        stock: {type: integer}
+        image: {type: string}
+        is_active: {type: boolean}
+        category:
+          type: object
+          properties:
+            id: {type: integer}
+            name: {type: string}
+    ProductInput:
+      type: object
+      required: [category_id, name, description, price, stock]
+      properties:
+        category_id: {type: integer, example: 1}
+        name: {type: string, example: Кения АА, 250 г}
+        description: {type: string, example: Яркий вкус с ягодами}
+        price: {type: number, example: 950}
+        stock: {type: integer, example: 20}
+        is_active: {type: boolean, example: true}
+    OrderInput:
+      type: object
+      required: [customer_name, phone, address, items]
+      properties:
+        customer_name: {type: string, example: Иван Смирнов}
+        phone: {type: string, example: "+79991234567"}
+        address: {type: string, example: г. Москва, ул. Тверская, д. 10}
+        comment: {type: string}
+        items:
+          type: array
+          items:
+            type: object
+            required: [product_id, quantity]
+            properties:
+              product_id: {type: integer, example: 1}
+              quantity: {type: integer, example: 2}
+    AuthResponse:
+      type: object
+      properties:
+        user: {type: object}
+        token: {type: string}

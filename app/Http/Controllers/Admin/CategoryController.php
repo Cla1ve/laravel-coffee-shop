@@ -19,7 +19,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate(['name' => 'required|string|min:2|max:100|unique:categories,name']);
-        $data['slug'] = Str::slug($data['name']);
+        $data['slug'] = Str::slug($data['name'], '-', 'ru');
 
         Category::create($data);
 
@@ -31,7 +31,7 @@ class CategoryController extends Controller
         $data = $request->validate([
             'name' => 'required|string|min:2|max:100|unique:categories,name,' . $category->id,
         ]);
-        $data['slug'] = Str::slug($data['name']);
+        $data['slug'] = Str::slug($data['name'], '-', 'ru');
 
         $category->update($data);
 
