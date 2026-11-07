@@ -104,7 +104,7 @@ class ApiTest extends TestCase
         $this->postJson('/api/orders', [
             'customer_name' => 'Иван', 'phone' => '+79991234567', 'address' => 'Москва, ул. Мира, 5',
             'items' => [['product_id' => $p->id, 'quantity' => 2]],
-        ])->assertCreated()->assertJsonPath('data.total', '1000.00');
+        ])->assertCreated()->assertJsonPath('data.total', '1000.00')->assertJsonPath('data.items.0.price', '500.00');
 
         $this->assertEquals(3, $p->fresh()->stock);
     }
