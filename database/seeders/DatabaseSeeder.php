@@ -2,24 +2,117 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Review;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // пользователи: админ и два покупателя (пароли учебные)
+        $admin = User::create([
+            'name' => 'Администратор',
+            'email' => 'admin@zerno.test',
+            'phone' => '+79990000001',
+            'password' => 'Admin2026!',
         ]);
+        $admin->role = 'admin';
+        $admin->save();
+
+        $ivan = User::create([
+            'name' => 'Иван Смирнов',
+            'email' => 'ivan@zerno.test',
+            'phone' => '+79990000002',
+            'password' => 'User2026!',
+        ]);
+        $olga = User::create([
+            'name' => 'Ольга Крылова',
+            'email' => 'olga@zerno.test',
+            'phone' => '+79990000003',
+            'password' => 'User2026!',
+        ]);
+
+        // категории
+        $cats = [];
+        foreach (['Кофе в зёрнах', 'Молотый кофе', 'Чай', 'Аксессуары'] as $name) {
+            $cats[$name] = Category::create(['name' => $name, 'slug' => Str::slug($name)]);
+        }
+
+        // товары: название, категория, цена, остаток, файл фото, описание
+        $products = [
+            ['Эфиопия Сидамо, 250 г', 'Кофе в зёрнах', 890, 40, 'ethiopia', 'Светлая обжарка. Во вкусе ягоды и цитрус, кислинка мягкая. Подходит для воронки и аэропресса.'],
+            ['Бразилия Сантос, 1 кг', 'Кофе в зёрнах', 2350, 25, 'brazil', 'Средняя обжарка. Вкус с орехом и шоколадом, почти без кислоты. Хорошо подходит для кофемашины.'],
+            ['Колумбия Супремо, 250 г', 'Кофе в зёрнах', 760, 50, 'colombia', 'Средняя обжарка. Сладкий вкус с карамелью, плотное тело. Один из самых ходовых сортов в магазине.'],
+            ['Смесь для эспрессо «Утро», 1 кг', 'Кофе в зёрнах', 2190, 18, 'espresso-blend', 'Смесь арабики и робусты. Густая пена, горчинка, хорошо держится с молоком.'],
+            ['Кофе для турки, 250 г', 'Молотый кофе', 640, 35, 'turk-ground', 'Помол очень мелкий, почти пудра. Варить в турке на песке или на плите.'],
+            ['Молотый для эспрессо, 250 г', 'Молотый кофе', 620, 30, 'espresso-ground', 'Мелкий помол для рожковой кофемашины. Обжарка средняя.'],
+            ['Молотый для фильтра, 250 г', 'Молотый кофе', 590, 28, 'filter-ground', 'Средний помол для капельной кофеварки и воронки.'],
+            ['Кофе в дрип-пакетах, 10 шт', 'Молотый кофе', 540, 60, 'drip-bags', 'Каждый пакет вешается на край кружки и заливается горячей водой. Удобно брать в офис.'],
+            ['Зелёный чай Сенча, 100 г', 'Чай', 420, 45, 'sencha', 'Японский листовой чай. Свежий травяной вкус. Заваривать водой 80 градусов.'],
+            ['Чёрный чай Ассам, 100 г', 'Чай', 380, 55, 'assam', 'Крупнолистовой индийский чай. Крепкий, с солодовым вкусом, хорошо идёт с молоком.'],
+            ['Матча, 50 г', 'Чай', 1250, 20, 'matcha', 'Порошок зелёного чая. Взбивается венчиком, подходит для напитков и десертов.'],
+            ['Имбирный чай с мёдом, 100 г', 'Чай', 450, 33, 'ginger-tea', 'Чёрный чай с кусочками имбиря и лимона. Тёплый пряный вкус.'],
+            ['Масала чай, 100 г', 'Чай', 460, 27, 'masala', 'Чёрный чай со специями: корица, кардамон, гвоздика. Варить с молоком.'],
+            ['Стеклянный кофейник, 600 мл', 'Аксессуары', 1490, 12, 'glass-server', 'Кофейник из термостойкого стекла с носиком. Подходит для воронки и холодного кофе.'],
+            ['Воронка для пуровера', 'Аксессуары', 990, 22, 'pour-over', 'Керамическая воронка на 1-4 чашки. Бумажные фильтры продаются отдельно.'],
+            ['Медная турка, 350 мл', 'Аксессуары', 1350, 15, 'cezve', 'Турка из меди с длинной ручкой. Внутри луженая, хорошо держит тепло.'],
+            ['Электрическая кофемолка', 'Аксессуары', 3290, 9, 'grinder', 'Жерновая, 12 степеней помола, ёмкость для зёрен 250 г.'],
+            ['Глиняный заварник, 700 мл', 'Аксессуары', 1180, 14, 'teapot', 'Заварник из глины с ситечком. Чай в нём дольше остаётся горячим.'],
+            ['Керамическая кружка, 300 мл', 'Аксессуары', 450, 70, 'mug', 'Серая кружка с толстыми стенками. Можно мыть в посудомойке.'],
+        ];
+
+        foreach ($products as [$name, $cat, $price, $stock, $img, $text]) {
+            Product::create([
+                'category_id' => $cats[$cat]->id,
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'description' => $text,
+                'price' => $price,
+                'stock' => $stock,
+                'image' => 'images/products/' . $img . '.jpg',
+                'is_active' => true,
+            ]);
+        }
+
+        // несколько заказов для примера
+        $this->makeOrder($ivan, 'done', [[1, 2], [9, 1]]);
+        $this->makeOrder($ivan, 'shipped', [[3, 1], [18, 2]]);
+        $this->makeOrder($olga, 'new', [[11, 1], [15, 1]]);
+        $this->makeOrder($olga, 'processing', [[5, 3]]);
+
+        // отзывы
+        Review::create(['user_id' => $ivan->id, 'product_id' => 1, 'rating' => 5, 'text' => 'Брал два пакета. Вкус яркий, по утрам сварил в воронке, понравилось.']);
+        Review::create(['user_id' => $olga->id, 'product_id' => 1, 'rating' => 4, 'text' => 'Хороший кофе, только кислинка для меня заметна.']);
+        Review::create(['user_id' => $ivan->id, 'product_id' => 9, 'rating' => 5, 'text' => 'Чай свежий, листья целые.']);
+    }
+
+    private function makeOrder(User $user, string $status, array $lines): void
+    {
+        $order = Order::create([
+            'user_id' => $user->id,
+            'status' => $status,
+            'total' => 0,
+            'customer_name' => $user->name,
+            'phone' => $user->phone,
+            'address' => 'г. Москва, ул. Тверская, д. 10, кв. 25',
+        ]);
+
+        $total = 0;
+        foreach ($lines as [$productId, $qty]) {
+            $product = Product::find($productId);
+            $order->items()->create([
+                'product_id' => $product->id,
+                'quantity' => $qty,
+                'price' => $product->price,
+            ]);
+            $total += $product->price * $qty;
+        }
+
+        $order->update(['total' => $total]);
     }
 }
