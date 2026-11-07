@@ -67,7 +67,7 @@ database/seeders          тестовые данные
 resources/views           шаблоны Blade (Bootstrap 5)
 routes/web.php, api.php   маршруты
 tests/                    автотесты
-docs/                     схемы, коллекция Postman, источники фото, SQL схемы
+docs/                     схемы (diagrams), скриншоты, коллекция Postman, SQL схемы, источники фото
 Курсовая работа.docx      пояснительная записка
 ```
 
